@@ -2,23 +2,27 @@ package cl.sebastian.sounddroid;
 
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
+
+import android.widget.SearchView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import cl.sebastian.sounddroid.soundcloud.SoundCloud;
@@ -30,7 +34,7 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements SearchView.OnQueryTextListener{
     static final String TAG = "MainActivity";
     List<Track> tracksList;
     TracksAdapter tracksAdapter;
@@ -39,7 +43,9 @@ public class MainActivity extends ActionBarActivity {
     private Toolbar playerToolbar;
     private MediaPlayer mediaPlayer;
     private ImageView playerState;
-
+    private SearchView searchView;
+    private SoundCloudService soundCloudService;
+    private List<Track> previousTracks;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,13 +89,11 @@ public class MainActivity extends ActionBarActivity {
         tracksAdapter = new TracksAdapter(tracksList, this);
         recyclerView.setAdapter(tracksAdapter);
 
-        SoundCloudService soundCloudService = SoundCloud.getService();
-        soundCloudService.searchSongs("dark horse", new Callback<List<Track>>() {
+        soundCloudService = SoundCloud.getService();
+        soundCloudService.getRecentsSongs(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), new Callback<List<Track>>() {
             @Override
             public void success(List<Track> tracks, Response response) {
-                tracksList.clear();
-                tracksList.addAll(tracks);
-                tracksAdapter.notifyDataSetChanged();
+                updateTracks(tracks);
             }
 
             @Override
@@ -138,6 +142,24 @@ public class MainActivity extends ActionBarActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        searchView = (SearchView) menu.findItem(R.id.search_view).getActionView();
+        searchView.setOnQueryTextListener(this);
+        MenuItemCompat.setOnActionExpandListener(menu.findItem(R.id.search_view), new MenuItemCompat.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                previousTracks = new ArrayList<Track>(tracksList);
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                updateTracks(previousTracks);
+                return true;
+            }
+        });
+
+
+
         return true;
     }
 
@@ -149,7 +171,8 @@ public class MainActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.search_view) {
+            searchView.setIconifiedByDefault(false);
             return true;
         }
 
@@ -167,4 +190,35 @@ public class MainActivity extends ActionBarActivity {
             mediaPlayer = null;
         }
     }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        searchView.clearFocus();
+        soundCloudService.searchSongs(query, new Callback<List<Track>>() {
+            @Override
+            public void success(List<Track> tracks, Response response) {
+                updateTracks(tracks);
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+
+            }
+        });
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        return false;
+    }
+
+
+    public void updateTracks(List<Track> tracks){
+        tracksList.clear();
+        tracksList.addAll(tracks);
+        tracksAdapter.notifyDataSetChanged();
+    }
+
+
 }
