@@ -2,36 +2,51 @@ package cl.sebastian.sounddroid;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import cl.sebastian.sounddroid.soundcloud.SoundCloud;
 import cl.sebastian.sounddroid.soundcloud.SoundCloudService;
 import cl.sebastian.sounddroid.soundcloud.Track;
+import cl.sebastian.sounddroid.soundcloud.TracksAdapter;
 import retrofit.Callback;
-import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 
 public class MainActivity extends ActionBarActivity {
-    private static final String TAG = "MainActivity";
+    static final String TAG = "MainActivity";
+    List<Track> tracksList;
+    TracksAdapter tracksAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Toolbar playerToolbar = (Toolbar) findViewById(R.id.player_toolbar);
+
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.songsListRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        tracksList = new ArrayList<>();
+        tracksAdapter = new TracksAdapter(tracksList, this);
+        recyclerView.setAdapter(tracksAdapter);
 
         SoundCloudService soundCloudService = SoundCloud.getService();
         soundCloudService.searchSongs("dark horse", new Callback<List<Track>>() {
             @Override
             public void success(List<Track> tracks, Response response) {
-                Log.d(TAG,"Titles: "+tracks.get(0).getTitle());
-
+                tracksList.clear();
+                tracksList.addAll(tracks);
+                tracksAdapter.notifyDataSetChanged();
             }
 
             @Override

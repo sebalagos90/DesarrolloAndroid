@@ -15,6 +15,9 @@ public class Track {
     @SerializedName("id")
     private int id;
 
+    @SerializedName("artwork_url")
+    String artWorkURL;
+
     public String getTitle() {
         return title;
     }
@@ -37,5 +40,21 @@ public class Track {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getArtWorkURL() {
+        return artWorkURL;
+    }
+
+    public void setArtWorkURL(String artWorkURL) {
+        this.artWorkURL = artWorkURL;
+    }
+
+    public String getAvatarURL(){
+        String avatarURL = artWorkURL;
+        if(avatarURL != null){
+            avatarURL = avatarURL.replace("large","tiny");
+        }
+        return artWorkURL;
     }
 }
