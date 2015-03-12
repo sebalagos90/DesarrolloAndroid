@@ -19,15 +19,24 @@
         android:theme="@style/Base.ThemeOverlay.AppCompat.Dark.ActionBar">
 
         <ImageView
+            android:id="@+id/selected_thumbnail"
             android:layout_width="@dimen/avatar_size"
             android:layout_height="@dimen/avatar_size"
             android:background="#FF0000"
             android:layout_marginRight="8dp"/>
 
         <TextView
-            android:text="Hello World"
+            android:id="@+id/selected_title"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"/>
+
+        <ImageView
+            android:id="@+id/player_state"
+            android:layout_width="@dimen/avatar_size"
+            android:layout_height="@dimen/avatar_size"
+            android:src="@drawable/ic_pause"
+            android:layout_gravity="right"/>
 
         </android.support.v7.widget.Toolbar>
 
