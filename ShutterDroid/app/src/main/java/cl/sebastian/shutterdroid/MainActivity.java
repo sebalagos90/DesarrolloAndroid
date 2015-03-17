@@ -2,31 +2,55 @@ package cl.sebastian.shutterdroid;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.util.Base64;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import retrofit.RequestInterceptor;
-import retrofit.RestAdapter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import cl.sebastian.shutterdroid.ShutterStock.Image;
+import cl.sebastian.shutterdroid.ShutterStock.ImagesAdapter;
+import cl.sebastian.shutterdroid.ShutterStock.ShutterStock;
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 
 public class MainActivity extends ActionBarActivity {
+
+    List<Image> imagesList;
+    ImagesAdapter imagesAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        new RestAdapter.Builder()
-                .setEndpoint("https://api.shutterstock.com")
-                .setRequestInterceptor(new RequestInterceptor() {
-                    @Override
-                    public void intercept(RequestFacade request) {
-                        String authInfo = "d5015946b5d18ec85f2c:253385a5fb53081766056e0cf7fbaf5e3ef8e08a";
-                        String auth = "Basic "+ Base64.encodeToString(authInfo.getBytes(), Base64.NO_WRAP);
-                        request.addHeader("Authorization", auth);
-                    }
-                })
-        .build();
+
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new GridLayoutManager(this,3));
+        imagesList = new ArrayList<>();
+        imagesAdapter = new ImagesAdapter(imagesList, this);
+        recyclerView.setAdapter(imagesAdapter);
+
+        ShutterStock.getRecent(new SimpleDateFormat("yyyy-MM-dd").format(new Date()), new Callback<List<Image>>() {
+            @Override
+            public void success(List<Image> images, Response response) {
+                imagesList.clear();
+                imagesList.addAll(images);
+                imagesAdapter.notifyDataSetChanged();
+
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+
+            }
+        });
+
 
     }
 
